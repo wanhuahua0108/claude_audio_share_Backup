@@ -1,10 +1,10 @@
 #!/bin/bash
-# MiniMax 音乐 Agent 一键搭建脚本
+# AI 音乐 Agent 一键搭建脚本（MiniMax + Suno）
 # 使用方法：chmod +x setup.sh && ./setup.sh
 
 set -e
 
-echo "=== MiniMax 音乐 Agent 搭建 ==="
+echo "=== AI 音乐 Agent 搭建（MiniMax + Suno）==="
 echo ""
 
 # 检查 Homebrew
@@ -54,13 +54,37 @@ mmx auth login --api-key "$API_KEY"
 echo ""
 mmx auth status
 
+# Suno API（可选）
+echo ""
+echo "🎵 Suno API 配置（可选，按回车跳过）"
+echo "  注册：https://sunoapi.org"
+echo ""
+read -p "请输入 Suno API Key（留空跳过）: " SUNO_KEY
+
+if [ -n "$SUNO_KEY" ]; then
+    mkdir -p ~/.suno
+    echo "{\"api_key\":\"$SUNO_KEY\"}" > ~/.suno/config.json
+    echo "✅ Suno API Key 已保存到 ~/.suno/config.json"
+
+    # 验证 Suno API Key
+    SUNO_CREDIT=$(curl -s -H "Authorization: Bearer $SUNO_KEY" \
+      "https://api.sunoapi.org/api/v1/generate/credit" 2>/dev/null | jq -r '.data.remainingCredits // empty' 2>/dev/null)
+    if [ -n "$SUNO_CREDIT" ]; then
+        echo "✅ Suno 剩余额度：$SUNO_CREDIT"
+    else
+        echo "⚠️  无法验证 Suno API Key，请稍后手动检查"
+    fi
+else
+    echo "⏭️  跳过 Suno 配置（之后可手动设置）"
+fi
+
 # 安装 MusicSkills
 echo ""
-echo "📦 安装三个 MusicSkills..."
+echo "📦 安装四个 MusicSkills..."
 npx skills add MiniMax-AI/skills --skill minimax-music-gen minimax-music-playlist buddy-sings --agent claude-code -y -g
 
 # 创建输出目录
-mkdir -p ~/Music/minimax-gen
+mkdir -p ~/Music/minimax-gen ~/Music/suno-gen
 
 # 测试
 echo ""
@@ -73,6 +97,7 @@ if [ -f ~/Music/minimax-gen/setup_test.mp3 ]; then
     echo ""
     echo "使用方式："
     echo "  在 Claude Code 中说「帮我写一首歌」→ 触发 minimax-music-gen"
+    echo "  在 Claude Code 中说「用Suno写首歌」→ 触发 suno-music-gen"
     echo "  在 Claude Code 中说「生成一个歌单」→ 触发 minimax-music-playlist"
     echo "  在 Claude Code 中说「让宠物唱首歌」→ 触发 buddy-sings"
 else

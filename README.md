@@ -1,6 +1,6 @@
-# MiniMax Music Agent
+# AI Music Agent
 
-基于 MiniMax AI 的音乐生成 Agent，包含三个可自定义的 MusicSkills，适用于 Claude Code。
+基于 MiniMax + Suno 双引擎的音乐生成 Agent，包含四个可自定义的 MusicSkills，适用于 Claude Code。
 
 ## 完整安装步骤
 
@@ -25,13 +25,34 @@ npm install -g mmx-cli
 4. 点击生成密钥，复制保存（只显示一次）
 5. 免费额度：music-2.6-free 模型，每天 100 次 API 调用
 
-### Step 3：认证
+### Step 3：认证 MiniMax
 
 ```bash
 mmx auth login --api-key sk-你的key
 
 # 验证是否成功
 mmx auth status
+```
+
+### Step 3.5：（可选）配置 Suno API
+
+如果你还想使用 Suno 引擎生成音乐：
+
+1. 前往 [sunoapi.org](https://sunoapi.org) 注册获取 API Key
+2. 配置 API Key：
+
+```bash
+# 方式一：环境变量（推荐，加到 ~/.zshrc 或 ~/.bashrc）
+export SUNO_API_KEY="your-api-key-here"
+
+# 方式二：配置文件
+mkdir -p ~/.suno && echo '{"api_key":"your-api-key-here"}' > ~/.suno/config.json
+```
+
+3. 验证：
+```bash
+curl -s -H "Authorization: Bearer $SUNO_API_KEY" \
+  "https://api.sunoapi.org/api/v1/generate/credit" | jq '.data'
 ```
 
 ### Step 4：安装 MusicSkills
@@ -51,6 +72,7 @@ npx skills add wanhuahua0108/claude_audio_share -y -g
 | 帮我写一首关于夏天的歌 | minimax-music-gen | 生成带人声的歌曲 |
 | 生成一段 lo-fi 纯音乐 | minimax-music-gen | 生成无人声背景音乐 |
 | 用爵士风格翻唱这首歌 + 附音频 | minimax-music-gen | AI 翻唱 |
+| 用 Suno 帮我写一首伤感的歌 | suno-music-gen | Suno 引擎生成（2 个版本） |
 | 根据我的口味生成一个歌单 | minimax-music-playlist | 分析口味 + 批量生成 5 首 |
 | 让宠物给我唱首歌 | buddy-sings | AI 宠物演唱 |
 
@@ -60,7 +82,7 @@ npx skills add wanhuahua0108/claude_audio_share -y -g
 
 > 也可以跳过以上步骤，直接运行一键脚本：`chmod +x setup.sh && ./setup.sh`
 
-## 三个 Skills 详解
+## 四个 Skills 详解
 
 ### minimax-music-gen（核心音乐生成）
 
@@ -79,6 +101,19 @@ npx skills add wanhuahua0108/claude_audio_share -y -g
 | music-2.6-free | 文本生成音乐 | 免费（每天 100 次） |
 | music-cover | 从参考音频翻唱 | 付费 |
 | music-cover-free | 翻唱 | 免费 |
+
+### suno-music-gen（Suno 音乐生成）
+
+使用 Suno AI 生成歌曲、纯音乐、翻唱。需要 Suno API Key（sunoapi.org）。
+
+- **Basic 模式**：一句话描述 → 直接生成
+- **Advanced 模式**：编辑歌词 → 选择风格 → 选择模型 → 确认生成
+- 每次生成 **2 个版本**，可对比选择
+- 支持 6 个模型：V4 ~ V5.5（推荐 V4_5ALL）
+- 支持续写（Extend）、翻唱（Cover）、Mashup、人声分离
+- 输出目录：`~/Music/suno-gen/YYYYMMDD_HHMMSS_<slug>_A.mp3`
+
+触发规则：需要明确提到「Suno」，如「用Suno写首歌」。不提 Suno 的通用音乐请求走 minimax-music-gen。
 
 ### minimax-music-playlist（歌单生成）
 
@@ -121,16 +156,30 @@ npx skills add your-username/claude_audio_share -y -g
 - 输出目录和文件命名规则
 - 歌单生成逻辑和口味分析权重
 
+## Windows 用户
+
+以上安装步骤针对 macOS。Windows 用户请参考 [Windows 跨平台适配指南](docs/windows_setup.md)，主要差异：
+
+- 用 `winget` 代替 `brew` 安装依赖
+- 安装 `mpv` 代替 `afplay` 播放音频
+- Apple Music 歌单分析不可用（改用 Spotify 导出或手动输入）
+- 推荐使用 Git Bash 运行 Skill 脚本
+
 ## 仓库结构
 
 ```text
 claude_audio_share/
 ├── README.md
 ├── setup.sh                                  # 一键搭建脚本
-└── skills/                                   # 三个 MusicSkills（可自定义）
+├── docs/
+│   └── windows_setup.md                      # Windows 适配指南
+└── skills/                                   # 四个 MusicSkills（可自定义）
     ├── minimax-music-gen/
-    │   ├── SKILL.md                          # 核心音乐生成指令
+    │   ├── SKILL.md                          # MiniMax 音乐生成指令
     │   └── references/prompt_guide.md        # Prompt 写作指南
+    ├── suno-music-gen/
+    │   ├── SKILL.md                          # Suno 音乐生成指令
+    │   └── references/suno_api.md            # Suno API 完整参考
     ├── minimax-music-playlist/
     │   ├── SKILL.md                          # 歌单生成指令
     │   └── data/artist_genre_map.json        # 20000+ 艺术家流派映射
@@ -140,5 +189,6 @@ claude_audio_share/
 
 ## 致谢
 
-- Skills 基于 [MiniMax-AI/skills](https://github.com/MiniMax-AI/skills) (MIT License)
-- 音乐生成使用 [MiniMax Music 2.6](https://www.minimax.io) 模型
+- MiniMax Skills 基于 [MiniMax-AI/skills](https://github.com/MiniMax-AI/skills) (MIT License)
+- MiniMax 音乐生成使用 [MiniMax Music 2.6](https://www.minimax.io) 模型
+- Suno 音乐生成通过 [sunoapi.org](https://sunoapi.org) API 接入
