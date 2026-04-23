@@ -362,18 +362,22 @@ Combine the vocal identity with the chosen theme.
 
    **With auto-generated lyrics (perspective not critical):**
    ```bash
+   mkdir -p ~/Music/minimax-gen
    mmx music generate \
      --prompt "<full combined prompt>" \
      --lyrics-optimizer \
+     --model music-2.6 \
      --out ~/Music/minimax-gen/<name>_sings_<YYYYMMDD_HHMMSS>.mp3 \
      --quiet --non-interactive
    ```
 
    **With self-written lyrics (perspective-controlled):**
    ```bash
+   mkdir -p ~/Music/minimax-gen
    mmx music generate \
      --prompt "<full combined prompt>" \
      --lyrics "<lyrics with correct pet perspective>" \
+     --model music-2.6 \
      --out ~/Music/minimax-gen/<name>_sings_<YYYYMMDD_HHMMSS>.mp3 \
      --quiet --non-interactive
    ```
