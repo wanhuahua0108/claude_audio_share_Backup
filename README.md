@@ -1,6 +1,6 @@
 # AI Music Agent
 
-基于 MiniMax + Suno 双引擎的音乐生成 Agent，包含四个可自定义的 MusicSkills，适用于 Claude Code。
+基于 MiniMax + Suno 双引擎的音乐生成 Agent，包含五个可自定义的 Skills，适用于 Claude Code。
 
 ## 完整安装步骤
 
@@ -75,6 +75,7 @@ npx skills add wanhuahua0108/claude_audio_share -y -g
 | 用 Suno 帮我写一首伤感的歌 | suno-music-gen | Suno 引擎生成（2 个版本） |
 | 根据我的口味生成一个歌单 | minimax-music-playlist | 分析口味 + 批量生成 5 首 |
 | 让宠物给我唱首歌 | buddy-sings | AI 宠物演唱 |
+| 把这段文字朗读出来 | tts-speak | ElevenLabs TTS，支持 29 种语言 |
 
 4. Skill 会自动引导你确认歌词、风格、结构
 5. 等待 30-120 秒生成
@@ -82,7 +83,18 @@ npx skills add wanhuahua0108/claude_audio_share -y -g
 
 > 也可以跳过以上步骤，直接运行一键脚本：`chmod +x setup.sh && ./setup.sh`
 
-## 四个 Skills 详解
+## 五个 Skills 详解
+
+### tts-speak（文字转语音）
+
+将文字转为 MP3 语音，使用 ElevenLabs 模型。需要能访问 ElevenLabs API 的 Key（可通过公司 LiteLLM Proxy 或直接使用 ElevenLabs API Key）。
+
+- 支持 29 种语言（中文、英文、日文、西班牙文等）
+- 两个模型：`eleven_v3`（英文表现力强）、`eleven_multilingual_v2`（多语言首选）
+- 输出目录：`~/Music/tts-gen/YYYYMMDD_HHMMSS_<slug>.mp3`
+- 所需 Key：`ANTHROPIC_AUTH_TOKEN`（走 LiteLLM Proxy）
+
+> **Windows 用户注意**：该 skill 的 JSON POST 通过 Python urllib 发送，可避免 Windows Git Bash curl 的 UTF-8 编码问题。
 
 ### minimax-music-gen（核心音乐生成）
 
@@ -173,7 +185,9 @@ claude_audio_share/
 ├── setup.sh                                  # 一键搭建脚本
 ├── docs/
 │   └── windows_setup.md                      # Windows 适配指南
-└── skills/                                   # 四个 MusicSkills（可自定义）
+└── skills/                                   # 五个 Skills（可自定义）
+    ├── tts-speak/
+    │   └── SKILL.md                          # 文字转语音（ElevenLabs）
     ├── minimax-music-gen/
     │   ├── SKILL.md                          # MiniMax 音乐生成指令
     │   └── references/prompt_guide.md        # Prompt 写作指南

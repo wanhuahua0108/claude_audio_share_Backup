@@ -38,7 +38,7 @@ prompt, plan before generating).
   mmx auth login --api-key <your-minimax-api-key>
   ```
   The API key can be obtained from [MiniMax Platform](https://platform.minimaxi.com/).
-  Credentials are saved to `~/.mmx/credentials.json` and persist across sessions.
+  Credentials are saved to `~/.mmx/config.json` and persist across sessions.
 
   **Verify:**
   ```bash
@@ -52,7 +52,7 @@ prompt, plan before generating).
 
 This skill uses the `mmx` CLI for all music generation:
 
-- **Music Generation**: `mmx music generate` — model: `music-2.6-free`
+- **Music Generation**: `mmx music generate` — always pass `--model music-2.6` explicitly
   - Supports `--lyrics-optimizer` to auto-generate lyrics from prompt
   - Supports `--instrumental` for instrumental tracks
   - Supports `--lyrics` for user-provided lyrics
@@ -200,9 +200,11 @@ Generate music using the mmx CLI:
 
 **Vocal with auto-generated lyrics:**
 ```bash
+mkdir -p ~/Music/minimax-gen
 mmx music generate \
   --prompt "<prompt>" \
   --lyrics-optimizer \
+  --model music-2.6 \
   --genre "<genre>" --mood "<mood>" --vocals "<vocal style>" \
   --instruments "<instruments>" --bpm <bpm> \
   --out ~/Music/minimax-gen/<filename>.mp3 \
@@ -211,9 +213,11 @@ mmx music generate \
 
 **Vocal with user-provided lyrics:**
 ```bash
+mkdir -p ~/Music/minimax-gen
 mmx music generate \
   --prompt "<prompt>" \
   --lyrics "<lyrics with section markers>" \
+  --model music-2.6 \
   --genre "<genre>" --mood "<mood>" --vocals "<vocal style>" \
   --out ~/Music/minimax-gen/<filename>.mp3 \
   --quiet --non-interactive
@@ -221,9 +225,11 @@ mmx music generate \
 
 **Instrumental (no vocal):**
 ```bash
+mkdir -p ~/Music/minimax-gen
 mmx music generate \
   --prompt "<prompt>" \
   --instrumental \
+  --model music-2.6 \
   --genre "<genre>" --mood "<mood>" --instruments "<instruments>" \
   --out ~/Music/minimax-gen/<filename>.mp3 \
   --quiet --non-interactive
@@ -314,6 +320,7 @@ When the user selects Cover mode:
 
 **Cover from local file:**
 ```bash
+mkdir -p ~/Music/minimax-gen
 mmx music cover \
   --prompt "<cover style description>" \
   --audio-file <source.mp3> \
@@ -323,6 +330,7 @@ mmx music cover \
 
 **Cover from URL:**
 ```bash
+mkdir -p ~/Music/minimax-gen
 mmx music cover \
   --prompt "<cover style description>" \
   --audio <source_url> \
@@ -332,6 +340,7 @@ mmx music cover \
 
 **With custom lyrics (text):**
 ```bash
+mkdir -p ~/Music/minimax-gen
 mmx music cover \
   --prompt "<style>" \
   --audio-file <source.mp3> \
@@ -342,6 +351,7 @@ mmx music cover \
 
 **With custom lyrics (file):**
 ```bash
+mkdir -p ~/Music/minimax-gen
 mmx music cover \
   --prompt "<style>" \
   --audio-file <source.mp3> \

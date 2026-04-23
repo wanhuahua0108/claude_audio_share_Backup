@@ -47,8 +47,14 @@ Suno generates **2 songs per request**, giving users options to compare and choo
     "https://api.sunoapi.org/api/v1/generate/credit" | jq .
   ```
 
-- **curl** and **jq** (required): For API calls and JSON parsing. Both are typically
-  pre-installed on macOS. Install jq if missing: `brew install jq`
+- **curl** (required): For API calls and downloading audio. Pre-installed on macOS and
+  Windows Git Bash. **IMPORTANT: use curl (not Python urllib) for all downloads** —
+  Cloudflare blocks urllib requests with HTTP 403.
+
+- **JSON parser** (one of):
+  - `jq` — preferred when available (`brew install jq` on macOS, `choco install jq` on
+    Windows). Used in the code snippets below.
+  - `python` — fallback when jq is missing (see python alternatives in each step).
 
 - **Audio player** (recommended): `mpv`, `ffplay`, or `afplay` (macOS built-in) for local
   playback. `mpv` is preferred for its interactive controls.
@@ -142,7 +148,10 @@ questions — infer instrumental + basic mode and proceed.
 Before making any API call, read the API key:
 
 ```bash
+# jq version
 SUNO_API_KEY="${SUNO_API_KEY:-$(jq -r '.api_key // empty' ~/.suno/config.json 2>/dev/null)}"
+# python fallback (Windows / no jq)
+SUNO_API_KEY="${SUNO_API_KEY:-$(python -c "import json; print(json.load(open('$HOME/.suno/config.json')).get('api_key',''))" 2>/dev/null)}"
 ```
 
 If empty, tell the user to set it up (see Prerequisites).
@@ -213,7 +222,7 @@ If empty, tell the user to set it up (see Prerequisites).
 **Generate music** using curl:
 
 ```bash
-SUNO_API_KEY="${SUNO_API_KEY:-$(jq -r '.api_key // empty' ~/.suno/config.json 2>/dev/null)}"
+SUNO_API_KEY="${SUNO_API_KEY:-$(python -c "import json; print(json.load(open('$HOME/.suno/config.json')).get('api_key',''))" 2>/dev/null)}"
 
 RESPONSE=$(curl -s -X POST "https://api.sunoapi.org/api/v1/generate" \
   -H "Authorization: Bearer $SUNO_API_KEY" \
@@ -228,7 +237,7 @@ RESPONSE=$(curl -s -X POST "https://api.sunoapi.org/api/v1/generate" \
     "callBackUrl": "https://example.com/callback"
   }')
 
-TASK_ID=$(echo "$RESPONSE" | jq -r '.data.taskId')
+TASK_ID=$(echo "$RESPONSE" | python -c "import json,sys; print(json.load(sys.stdin).get('data',{}).get('taskId',''))")
 echo "Task ID: $TASK_ID"
 ```
 
@@ -254,8 +263,8 @@ while true; do
   RESULT=$(curl -s -H "Authorization: Bearer $SUNO_API_KEY" \
     "https://api.sunoapi.org/api/v1/generate/record-info?taskId=$TASK_ID")
   
-  STATUS=$(echo "$RESULT" | jq -r '.data.status')
-  
+  STATUS=$(echo "$RESULT" | python -c "import json,sys; d=json.load(sys.stdin); print(d.get('data',{}).get('status','UNKNOWN'))")
+
   case "$STATUS" in
     SUCCESS)
       echo "Generation complete!"
@@ -266,7 +275,7 @@ while true; do
       ;;
     *)
       echo "Error: $STATUS"
-      echo "$RESULT" | jq '.data.errorMessage'
+      echo "$RESULT" | python -c "import json,sys; d=json.load(sys.stdin); print(d.get('data',{}).get('errorMessage',''))"
       break
       ;;
   esac
@@ -292,10 +301,10 @@ mkdir -p ~/Music/suno-gen
 SLUG="<short_slug_from_prompt>"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
-AUDIO_URL_A=$(echo "$RESULT" | jq -r '.data.response.sunoData[0].audioUrl')
-AUDIO_URL_B=$(echo "$RESULT" | jq -r '.data.response.sunoData[1].audioUrl')
-TITLE_A=$(echo "$RESULT" | jq -r '.data.response.sunoData[0].title')
-TITLE_B=$(echo "$RESULT" | jq -r '.data.response.sunoData[1].title')
+AUDIO_URL_A=$(echo "$RESULT" | python -c "import json,sys; print(json.load(sys.stdin)['data']['response']['sunoData'][0]['audioUrl'])")
+AUDIO_URL_B=$(echo "$RESULT" | python -c "import json,sys; print(json.load(sys.stdin)['data']['response']['sunoData'][1]['audioUrl'])")
+TITLE_A=$(echo "$RESULT" | python -c "import json,sys; print(json.load(sys.stdin)['data']['response']['sunoData'][0]['title'])")
+TITLE_B=$(echo "$RESULT" | python -c "import json,sys; print(json.load(sys.stdin)['data']['response']['sunoData'][1]['title'])")
 
 FILE_A=~/Music/suno-gen/${TIMESTAMP}_${SLUG}_A.mp3
 FILE_B=~/Music/suno-gen/${TIMESTAMP}_${SLUG}_B.mp3
@@ -763,7 +772,7 @@ Uploaded files expire after **3 days**. Three upload methods available:
 - **Credits**: Check remaining credits before large batch operations:
   ```bash
   curl -s -H "Authorization: Bearer $SUNO_API_KEY" \
-    "https://api.sunoapi.org/api/v1/generate/credit" | jq '.data'
+    "https://api.sunoapi.org/api/v1/generate/credit" | python -c "import json,sys; print(json.load(sys.stdin).get('data',''))"
   ```
 - **No callback server needed**: This skill uses polling (every 30 seconds) instead of
   callbacks, since Claude Code doesn't have a webhook endpoint.
